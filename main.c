@@ -15,12 +15,13 @@ typedef struct {
 
 // Incomplete grid function
 void CreateGriddedImageAvg(long *griddedImgAvg, uint8_t *img, Vector2 imgSize, Vector2 gridSize) {
-	//for every grid square
 	Vector2 gridSquareSize = {imgSize.x / gridSize.x, imgSize.y / gridSize.y};
-	Vector3 tmpSum[gridSize.x][gridSize.y];
-	for (int pixelRow = 0; pixelRow < gridSquareSize.x; ++pixelRow) {
-		for (int pixelColumn = 0; pixelColumn < gridSquareSize.y; ++pixelColumn) {
-			tmpSum[pixelRow / + pixelRow % gridSquareSize.x][].x += *(uint32_t*)&img[pixelRow*gridSquareSize.x+pixelColumn];
+	Vector2 pixelTracker = {0, 0};
+	Vector2 gridTracker = {0, 0};
+	for (int pixelRow = 0; pixelRow < imgSize.x; ++pixelRow) {
+		for (int pixelColumn = 0; pixelColumn < imgSize.y; ++pixelColumn) {
+			// Do check stuff ig (I'll add later)
+			(pixelTracker.x < gridSquareSize.x) ? ++pixelTracker.x : pixelTracker.x = 0, ++gridTracker.x; 
 		}
 	}
 }
