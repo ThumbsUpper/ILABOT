@@ -14,44 +14,61 @@ typedef struct {
 } Vector3;
 
 // Incomplete grid function
-void CreateGriddedImageAvg(long *griddedImgAvg, uint8_t *img, Vector2 imgSize, Vector2 gridSize) {
-	Vector2 gridSquareSize = {imgSize.x / gridSize.x, imgSize.y / gridSize.y};
+void CreateGriddedImageAvg(Vector3 *griddedImgAvg, uint8_t *img, Vector2 imgSize, Vector2 gridSize) {
+	printf("Yeah, it's not good. (Live in Las Vegas 20 %i %i)\n", imgSize.x, imgSize.y);
+
+	// Fix this later vvv
+	Vector2 gridSquareSize = {round((double)imgSize.x / (double)gridSize.x), round((double)imgSize.y / (double)gridSize.y)};
 	Vector2 pixelTracker = {0, 0};
 	Vector2 gridTracker = {0, 0};
-	for (int pixelRow = 0; pixelRow < imgSize.x; ++pixelRow) {
-		for (int pixelColumn = 0; pixelColumn < imgSize.y; ++pixelColumn) {
-			// Do check stuff ig (I'll add later)
-			(pixelTracker.x < gridSquareSize.x) ? ++pixelTracker.x : pixelTracker.x = 0, ++gridTracker.x; 
+	printf("%i, %i", gridSize.x, gridSize.y);
+	Vector3 gridSquareTotal[gridSize.x][gridSize.y];
+	int rowSize = imgSize.x;
+	for (int pixelRow = 0; pixelRow < imgSize.y; ++pixelRow) {
+		for (int pixelColumn = 0; pixelColumn < imgSize.x;) {
+			gridSquareTotal[gridTracker.x][gridTracker.y].x = img[pixelRow * rowSize + pixelColumn];
+			gridSquareTotal[gridTracker.x][gridTracker.y].y = img[pixelRow * rowSize + pixelColumn + 1];
+			gridSquareTotal[gridTracker.x][gridTracker.y].z = img[pixelRow * rowSize + pixelColumn + 2];
+			if (pixelTracker.x < gridSquareSize.x) {++pixelTracker.x;} 
+			else {pixelTracker.x = 0, ++gridTracker.x;}
+			pixelColumn += 3;
+		}
+		gridTracker.x = 0;
+		if (pixelTracker.y < gridSquareSize.y) {++pixelTracker.y;} 
+		else {pixelTracker.y = 0, ++gridTracker.y;} 
+	}
+	long gridSquareSizeTotal = gridSquareSize.x * gridSquareSize.y;
+	for (int gridRow = 0; gridRow < gridSize.x; ++gridRow) {
+		for (int gridColumn = 0; gridColumn < imgSize.y; ++gridColumn) {
+			griddedImgAvg[gridRow * gridSize.x + gridColumn].x = gridSquareTotal[gridRow][gridColumn].x / gridSquareSizeTotal;
+			griddedImgAvg[gridRow * gridSize.x + gridColumn].y = gridSquareTotal[gridRow][gridColumn].y / gridSquareSizeTotal;
+			griddedImgAvg[gridRow * gridSize.x + gridColumn].z = gridSquareTotal[gridRow][gridColumn].z / gridSquareSizeTotal;
 		}
 	}
 }
 
-int gcd(int a, int b) {
+Vector2 gcd(int a, int b) {
 	while (b != 0) {
 		int temp = b;
 		b = a % b;
 		a = temp;
 	}
-	return a;
+	Vector2 result = {a, b};
+	return result;
 }
 
-int main(int argc, char **argv) {
+int main(void) {
 
 	// file opeining code
 	FILE *img = fopen("current.bmp", "r");
 	FILE *imgcheck = fopen("prev.bmp", "r");
-	if (imgcheck == NULL || img == NULL) {
-        printf("File not successfully opened\n");
-        return 1;
-    }
+	if (img == NULL || imgcheck == NULL) { printf("File not successfully opened\n"); return 1; }
 
 	// Image Processing Code
 	// Load Images into Buffers
 	uint8_t imgHeaderBuffer[0x20];
 	size_t bytesRead = fread(imgHeaderBuffer, 1, 0x20, img);
-	if (bytesRead == NULL) {
-		printf("Error reading from file\n");
-	}
+	if (bytesRead == 0) { printf("Error reading from file\n"); return 1; }
 	
 	// Define Image Specifications
 	Vector2 imgSize;
@@ -59,32 +76,20 @@ int main(int argc, char **argv) {
 	imgSize.x = *(uint32_t*)&imgHeaderBuffer[0x12];
 	imgSize.y = *(uint32_t*)&imgHeaderBuffer[0x16];
 	uint8_t *imgBuffer = malloc(imgSize.x *imgSize.y * 3);
+	if (imgBuffer == 0) { printf("Error reading from file\n"); return 1; }
 
 	//Send img to be split up
 	fseek(img, startimg, 0);
 	Vector2 gridSize;
-	gridSize.x = gcd(imgSize.x, imgSize.y) * 4;
-	gridSize.y = 4;
-	long *griddedImg = malloc(gridSize.x * gridSize.y * 3 * sizeof(int));
+	gridSize = gcd(imgSize.x, imgSize.y);
+	Vector3 *griddedImgAvg = malloc(gridSize.x * gridSize.y * 3 * sizeof(int));
 	bytesRead = fread(imgBuffer, 1, imgSize.x * imgSize.y * 3, img);
-	
-	CreateGriddedImageAvg(griddedImg, imgBuffer, imgSize, gridSize);	
+	if (bytesRead == 0) { printf("Error reading from file\n"); return 1; }
 
-	// Load imgCheck into a buffer
-	uint8_t imgCheckHeaderBuffer[0x20];
-	bytesRead = fread(imgCheckHeaderBuffer, 1, 0x20, imgcheck);
-	if (bytesRead == NULL) {
-		printf("Error reading from file\n");
-	} 
-
-	Vector2 imgCheckSize;
-	uint32_t startimgCheck = *(uint32_t*)&imgCheckHeaderBuffer[0x0A];
-	imgCheckSize.x = *(uint32_t*)&imgCheckHeaderBuffer[0x12];
-	imgCheckSize.y = *(uint32_t*)&imgCheckHeaderBuffer[0x16];
-	uint8_t *imgCheckBuffer = malloc(imgSize.x *imgSize.y * 3);
+	CreateGriddedImageAvg(griddedImgAvg, imgBuffer, imgSize, gridSize);	
 
 	// close the files
-	free(griddedImg);
+	free(griddedImgAvg);
     fclose(imgcheck);
     fclose(img);
     return 0;

@@ -7,7 +7,7 @@ SRC = main.c
 all: $(TARGET) 
 
 $(TARGET): $(SRC)
-	$(CC) $(SRC) $(CFLAGS) $(LIBS) -o $(TARGET)
+	$(CC) $(SRC) $(CFLAGS) $(LIBS) -o $(TARGET) -lm
 
 Clean:
 	rm -f $(TARGET)
