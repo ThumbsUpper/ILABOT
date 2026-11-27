@@ -3,5 +3,6 @@
 differienceOutput.pgm
 imgcheckOutput.pgm
 imgOutput.pgm
-main
-Makefile
+src/main
+src/Makefile
+src/differenceOutput.ppm
