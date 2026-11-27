@@ -1,0 +1,7 @@
+.vscode/
+.wakatime-project
+differienceOutput.pgm
+imgcheckOutput.pgm
+imgOutput.pgm
+main
+Makefile
